@@ -57,7 +57,7 @@ mcupload {
 }
 
 repositories {
-    // mavenLocal()
+    mavenLocal()
     maven { url = uri("https://repo.opencollab.dev/maven-snapshots/") }
     maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
     maven { url = uri("https://hub.spigotmc.org/nexus/") }
@@ -162,7 +162,7 @@ dependencies {
     libby("org.spongepowered:configurate-hocon:4.1.2")
     libby("at.favre.lib:bcrypt:0.10.2")
     libby("dev.samstevens.totp:totp:1.7.1")
-    compileOnly("dev.simplix:protocolize-api:2.4.2")
+    compileOnly("dev.simplix:protocolize-api:2.4.3")
     libby("org.bouncycastle:bcprov-jdk18on:1.80")
     libby("org.apache.commons:commons-email:1.6.0")
     // DO NOT UPGRADE TO 4.15.0 OR ABOVE BEFORE TESTING WATERFALL AND BUNGEECORD COMPATIBILITY!!!
