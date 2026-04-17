@@ -89,7 +89,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
         var item = new ItemStack(ItemType.FILLED_MAP, 1, (short) 0);
 
         if (protocol >= ProtocolVersions.MINECRAFT_1_17) {
-            item.nbtData().putInt("map", 0);
+            item.nbtData().putInt("map", 9999);
         }
 
         protocolize.sendPacket(new SetSlot().slot((short) 36).itemStack(item));
@@ -97,7 +97,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
         protocolize.sendPacket(new HeldItemChange().newSlot((short) 0));
 
         byte[] data = renderQR(image);
-        protocolize.sendPacket(new MapDataPacket(0, (byte) 0, new MapData(128, 128, 0, 0, data)));
+        protocolize.sendPacket(new MapDataPacket(9999, (byte) 0, new MapData(128, 128, 0, 0, data)));
     }
 
     private void projectRaw(BufferedImage image, P player, int protocol) {
@@ -126,7 +126,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
 
             // 3. Send MapDataPacket — QR code image
             byte[] data = renderQR(image);
-            sendRawMapData(channel, protocol, mapDataPacketId, 0, (byte) 0, data);
+            sendRawMapData(channel, protocol, mapDataPacketId, 9999, (byte) 0, data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,7 +155,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
         // map_id component
         int mapIdComponentType = lookup(MAP_ID_COMPONENT_IDS, protocol);
         writeVarInt(buf, mapIdComponentType); // component type ID
-        writeVarInt(buf, 0);                  // map id value
+        writeVarInt(buf, 9999);               // map id value (high unused ID)
 
         channel.writeAndFlush(buf);
     }
