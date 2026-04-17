@@ -46,8 +46,9 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
 
             auth.beginTwoFactorAuth(user, player, data);
 
+            // Wait for player to fully transfer to limbo before projecting
             plugin.cancelOnExit(plugin.delay(() -> {
-                plugin.getImageProjector().project(data.qr(), player);
+                if (!auth.isAwaiting2FA(player)) return;
 
                 sender.sendMessage(getMessage("totp-show-info"));
 
@@ -56,8 +57,8 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                     if (auth.isAwaiting2FA(player)) {
                         plugin.getImageProjector().project(data.qr(), player);
                     }
-                }, 3000, 3000), player);
-            }, plugin.getConfiguration().get(ConfigurationKeys.TOTP_DELAY)), player);
+                }, 0, 3000), player);
+            }, 3000), player);
         });
     }
 }
