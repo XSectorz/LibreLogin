@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> {
 
     @SuppressWarnings("RegExpSimplifiable") //I don't believe you
-    private static final Pattern NAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]*");
+    private static final Pattern NAME_PATTERN = Pattern.compile("[a-zA-Z0-9_.]*");
 
     protected final Plugin plugin;
     protected final PlatformHandle<P, S> platformHandle;
@@ -42,7 +42,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
     protected void onPostLogin(P player, User user) {
         var ip = platformHandle.getIP(player);
         var uuid = platformHandle.getUUIDForPlayer(player);
-        if (plugin.fromFloodgate(uuid)) return;
+//        if (plugin.fromFloodgate(uuid)) return;
 
         if (user == null) {
             user = plugin.getDatabaseProvider().getByUUID(uuid);
@@ -272,13 +272,11 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
 
     protected BiHolder<Boolean, S> chooseServer(P player, @Nullable String ip, @Nullable User user) {
         var id = platformHandle.getUUIDForPlayer(player);
-        var fromFloodgate = plugin.fromFloodgate(id);
-
+//        var fromFloodgate = plugin.fromFloodgate(id);
+        var fromFloodgate = false;
         var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
 
-        if (fromFloodgate) {
-            user = null;
-        } else if (user == null) {
+        if (user == null) {
             user = plugin.getDatabaseProvider().getByUUID(id);
         }
 
