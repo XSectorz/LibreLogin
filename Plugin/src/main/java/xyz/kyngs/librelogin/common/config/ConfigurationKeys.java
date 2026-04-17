@@ -28,6 +28,7 @@ public class ConfigurationKeys {
                     "2faconfirm",
                     "verify2fa",
                     "xsauth",
+                    "forgotpassword",
                     "l",
                     "log",
                     "reg",
