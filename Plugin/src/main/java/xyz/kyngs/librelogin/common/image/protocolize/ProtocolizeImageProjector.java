@@ -52,8 +52,9 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
 
     // MapId component type IDs
     private static final int[][] MAP_ID_COMPONENT_IDS = {
-        {766, 769, 26},   // minecraft:map_id component type ID
-        {770, 774, 26},   // Same component type ID
+        {766, 769, 36},
+        {770, 773, 37},
+        {774, 774, 44},
     };
 
     public ProtocolizeImageProjector(AuthenticLibreLogin<P, S> plugin) {
@@ -136,25 +137,25 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
         ByteBuf buf = Unpooled.buffer();
         writeVarInt(buf, packetId);
 
-        // Window ID (0 = player inventory)
-        buf.writeByte(0);
-        // State ID (varint, 0)
+        // Window ID (varint in 770+, byte in older)
+        writeVarInt(buf, 0);
+        // State ID (varint)
         writeVarInt(buf, 0);
         // Slot (short, 36 = hotbar slot 0)
         buf.writeShort(36);
 
-        // Item: present=true, itemId=filledMapId, count=1, components
-        buf.writeBoolean(true);             // present
+        // Slot data: itemCount (varint), if > 0: itemId, components
+        writeVarInt(buf, 1);                // count (varint in 770+, means 1 item = present)
         writeVarInt(buf, filledMapId);       // item ID
-        buf.writeByte(1);                   // count
 
         // Components: added count=1 (map_id), removed count=0
         writeVarInt(buf, 1);  // number of components to add
         writeVarInt(buf, 0);  // number of components to remove
 
-        // map_id component (type 26, value = varint 0)
-        writeVarInt(buf, 26); // component type ID for map_id
-        writeVarInt(buf, 0);  // map id value
+        // map_id component
+        int mapIdComponentType = lookup(MAP_ID_COMPONENT_IDS, protocol);
+        writeVarInt(buf, mapIdComponentType); // component type ID
+        writeVarInt(buf, 0);                  // map id value
 
         channel.writeAndFlush(buf);
     }
@@ -162,7 +163,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
     private void sendRawHeldItemChange(Channel channel, int packetId, short slot) {
         ByteBuf buf = Unpooled.buffer();
         writeVarInt(buf, packetId);
-        buf.writeByte(slot);
+        writeVarInt(buf, slot); // varint in 770+
         channel.writeAndFlush(buf);
     }
 
