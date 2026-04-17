@@ -26,6 +26,7 @@ public class ConfigurationKeys {
                     "register",
                     "2fa",
                     "2faconfirm",
+                    "verify2fa",
                     "l",
                     "log",
                     "reg",
