@@ -11,6 +11,7 @@ import dev.simplix.protocolize.api.item.ItemStack;
 import dev.simplix.protocolize.api.providers.ModuleProvider;
 import dev.simplix.protocolize.api.util.ProtocolVersions;
 import dev.simplix.protocolize.data.ItemType;
+import dev.simplix.protocolize.data.item.component.MapIdComponentImpl;
 import dev.simplix.protocolize.data.packets.HeldItemChange;
 import dev.simplix.protocolize.data.packets.SetSlot;
 import io.netty.buffer.ByteBuf;
@@ -55,7 +56,10 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
                 (short) 0
         );
 
-        if (protocol >= ProtocolVersions.MINECRAFT_1_17) {
+        if (protocol >= 766) {
+            // 1.20.5+ uses structured components
+            item.addComponent(new MapIdComponentImpl(0));
+        } else if (protocol >= ProtocolVersions.MINECRAFT_1_17) {
             item.nbtData()
                     .putInt("map", 0);
         }
