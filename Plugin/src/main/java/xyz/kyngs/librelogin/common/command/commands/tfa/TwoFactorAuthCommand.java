@@ -50,6 +50,13 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                 plugin.getImageProjector().project(data.qr(), player);
 
                 sender.sendMessage(getMessage("totp-show-info"));
+
+                // Keep resending the map data every 3 seconds while player is awaiting 2FA
+                plugin.cancelOnExit(plugin.repeat(() -> {
+                    if (auth.isAwaiting2FA(player)) {
+                        plugin.getImageProjector().project(data.qr(), player);
+                    }
+                }, 3000, 3000), player);
             }, plugin.getConfiguration().get(ConfigurationKeys.TOTP_DELAY)), player);
         });
     }
