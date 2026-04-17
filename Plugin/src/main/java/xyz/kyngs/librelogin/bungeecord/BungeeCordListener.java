@@ -54,7 +54,7 @@ public class BungeeCordListener extends AuthenticListeners<BungeeCordLibreLogin,
 
     @EventHandler(priority = HIGHEST)
     public void onPreLogin(PreLoginEvent event) {
-        if (plugin.fromFloodgate(event.getConnection().getUniqueId())) return;
+//        if (plugin.fromFloodgate(event.getConnection().getUniqueId())) return;
 
         runAsyncEvent(event, () -> {
             var result = onPreLogin(event.getConnection().getName(), event.getConnection().getAddress().getAddress());
@@ -95,7 +95,7 @@ public class BungeeCordListener extends AuthenticListeners<BungeeCordLibreLogin,
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onProfileRequest(LoginEvent event) {
-        if (plugin.fromFloodgate(event.getConnection().getUniqueId())) return;
+//        if (plugin.fromFloodgate(event.getConnection().getUniqueId())) return;
 
         // Note to future self: NEVER EVER RUN THIS ASYNC, IT WILL BREAK PLUGINS
 
