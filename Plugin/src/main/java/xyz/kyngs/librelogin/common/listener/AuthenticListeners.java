@@ -57,7 +57,19 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
                 plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(floodgateUser, player, plugin, AuthenticatedEvent.AuthenticationReason.SESSION));
                 return;
             }
-            // Not registered — require registration
+            // Not registered — create user if needed, then require registration
+            if (user == null) {
+                var playerName = platformHandle.getUsernameForPlayer(player);
+                var newID = plugin.generateNewUUID(playerName, null);
+                user = new xyz.kyngs.librelogin.common.database.AuthenticUser(
+                        newID, null, null,
+                        platformHandle.getUsernameForPlayer(player),
+                        java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()),
+                        java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()),
+                        null, ip, null, null, null
+                );
+                plugin.getDatabaseProvider().insertUser(user);
+            }
             if (user != null) {
                 plugin.getAuthorizationProvider().startTracking(user, player);
             }
