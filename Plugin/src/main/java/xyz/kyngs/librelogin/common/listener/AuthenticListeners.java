@@ -43,20 +43,31 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
         var ip = platformHandle.getIP(player);
         var uuid = platformHandle.getUUIDForPlayer(player);
         if (plugin.fromFloodgate(uuid)) {
-            // Floodgate: auto-login if registered, otherwise require registration
             if (user == null) {
+                // Try by UUID first, then by name (UUID may differ from registration)
                 user = plugin.getDatabaseProvider().getByUUID(uuid);
+                if (user == null) {
+                    user = plugin.getDatabaseProvider().getByName(platformHandle.getUsernameForPlayer(player));
+                }
             }
             if (user != null && user.isRegistered()) {
-                // Already registered — auto-login
+                // Auto-login: fire authenticated event so LibreLogin marks player as authorized
+                var floodgateUser = user;
+                plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-session-logged-in")), 500);
+                plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(floodgateUser, player, plugin, AuthenticatedEvent.AuthenticationReason.SESSION));
                 return;
             }
-            // Not registered — fall through to startTracking (shows register dialog)
+            // Not registered — require registration
+            if (user != null) {
+                plugin.getAuthorizationProvider().startTracking(user, player);
+            }
+            return;
         }
 
         if (user == null) {
             user = plugin.getDatabaseProvider().getByUUID(uuid);
         }
+        if (user == null) return;
         var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
 
         if (user.autoLoginEnabled()) {
@@ -288,6 +299,9 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
         if (fromFloodgate) {
             if (user == null) {
                 user = plugin.getDatabaseProvider().getByUUID(id);
+            }
+            if (user == null) {
+                user = plugin.getDatabaseProvider().getByName(platformHandle.getUsernameForPlayer(player));
             }
             // Only auto-lobby if registered
             if (user != null && user.isRegistered()) {
