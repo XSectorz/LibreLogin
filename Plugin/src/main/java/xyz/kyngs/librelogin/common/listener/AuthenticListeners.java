@@ -42,20 +42,26 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
     protected void onPostLogin(P player, User user) {
         var ip = platformHandle.getIP(player);
         var uuid = platformHandle.getUUIDForPlayer(player);
+        if (plugin.fromFloodgate(uuid)) {
+            // Floodgate: auto-login if registered, otherwise require registration
+            if (user == null) {
+                user = plugin.getDatabaseProvider().getByUUID(uuid);
+            }
+            if (user != null && user.isRegistered()) {
+                // Already registered — auto-login
+                return;
+            }
+            // Not registered — fall through to startTracking (shows register dialog)
+        }
 
         if (user == null) {
             user = plugin.getDatabaseProvider().getByUUID(uuid);
         }
         var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
-        var fromFloodgate = plugin.fromFloodgate(uuid);
 
         if (user.autoLoginEnabled()) {
             plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-premium-logged-in")), 500);
             plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, AuthenticatedEvent.AuthenticationReason.PREMIUM));
-        } else if (fromFloodgate && user.isRegistered()) {
-            // Floodgate players auto-login after registration (Xbox Live authenticated)
-            plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-session-logged-in")), 500);
-            plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, AuthenticatedEvent.AuthenticationReason.SESSION));
         } else if (sessionTime != null && user.getLastAuthentication() != null && ip.equals(user.getIp()) && user.getLastAuthentication().toLocalDateTime().plus(sessionTime).isAfter(LocalDateTime.now())) {
             plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-session-logged-in")), 500);
             plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, AuthenticatedEvent.AuthenticationReason.SESSION));
@@ -276,10 +282,20 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
 
     protected BiHolder<Boolean, S> chooseServer(P player, @Nullable String ip, @Nullable User user) {
         var id = platformHandle.getUUIDForPlayer(player);
-        var fromFloodgate = plugin.fromFloodgate(id) && user != null && user.isRegistered();
+        var fromFloodgate = plugin.fromFloodgate(id);
         var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
 
-        if (user == null) {
+        if (fromFloodgate) {
+            if (user == null) {
+                user = plugin.getDatabaseProvider().getByUUID(id);
+            }
+            // Only auto-lobby if registered
+            if (user != null && user.isRegistered()) {
+                return new BiHolder<>(true, plugin.getServerHandler().chooseLobbyServer(user, player, true, false));
+            }
+            // Not registered — go to limbo for registration
+            return new BiHolder<>(false, plugin.getServerHandler().chooseLimboServer(user, player));
+        } else if (user == null) {
             user = plugin.getDatabaseProvider().getByUUID(id);
         }
 
@@ -287,7 +303,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
             ip = platformHandle.getIP(player);
         }
 
-        if (fromFloodgate || user.autoLoginEnabled() || (sessionTime != null && user.getLastAuthentication() != null && ip.equals(user.getIp()) && user.getLastAuthentication().toLocalDateTime().plus(sessionTime).isAfter(LocalDateTime.now()))) {
+        if (fromFloodgate || (user != null && user.autoLoginEnabled()) || (user != null && sessionTime != null && user.getLastAuthentication() != null && ip.equals(user.getIp()) && user.getLastAuthentication().toLocalDateTime().plus(sessionTime).isAfter(LocalDateTime.now()))) {
             return new BiHolder<>(true, plugin.getServerHandler().chooseLobbyServer(user, player, true, false));
         } else {
             return new BiHolder<>(false, plugin.getServerHandler().chooseLimboServer(user, player));
