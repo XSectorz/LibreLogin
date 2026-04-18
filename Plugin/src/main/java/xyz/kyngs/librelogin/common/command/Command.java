@@ -70,9 +70,12 @@ public class Command<P> extends BaseCommand {
 
         var uuid = plugin.getPlatformHandle().getUUIDForPlayer(player);
 
-        if (plugin.fromFloodgate(uuid)) throw new InvalidCommandArgument(getMessage("error-from-floodgate"));
-
-        return plugin.getDatabaseProvider().getByUUID(uuid);
+        var user = plugin.getDatabaseProvider().getByUUID(uuid);
+        // Floodgate players may have registered with a different UUID, try by name
+        if (user == null && plugin.fromFloodgate(uuid)) {
+            user = plugin.getDatabaseProvider().getByName(plugin.getPlatformHandle().getUsernameForPlayer(player));
+        }
+        return user;
     }
 
     protected void setPassword(Audience sender, User user, String password, String messageKey) {
